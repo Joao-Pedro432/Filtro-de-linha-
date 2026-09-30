@@ -6,6 +6,9 @@ import numpy as np
 from scipy.signal import butter, filtfilt
 from numpy.fft import rfft, rfftfreq
 
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 # Variáveis
 sinal_original = None
 sinal_filtrado = None
@@ -144,6 +147,13 @@ def aplicar_filtro():
             n,
             1 / fs
         )
+
+# Atualizar os gráficos
+        atualizar_graficos(
+                fft_original,
+                fft_filtrado
+            )
+        
     except ValueError as e:
         messagebox.showerror("Erro", f"Valor inválido: {e}")
 
@@ -165,15 +175,162 @@ def limpar_dados():
     
     messagebox.showinfo("Limpeza", "Dados reiniciados com sucesso!")
 
+#=======================CRIAÇÃO DOS GRÁFICOS============================
+
+# Função para atualizar os gráficos
+
+def atualizar_graficos(
+    fft_original,
+    fft_filtrado
+):
+
+    global figura, eixos, canvas
+    
+    for eixo in eixos:
+        eixo.clear()
+
+    # GRÁFICO 1 - SINAL ORIGINAL
+
+    eixos[0].plot(
+        tempo,
+        sinal_original,
+        label="Sinal original"
+    )
+
+    eixos[0].set_title(
+        "Sinal Original - Domínio do Tempo"
+    )
+
+    eixos[0].set_xlabel(
+        "Tempo (s)"
+    )
+
+    eixos[0].set_ylabel(
+        "Amplitude"
+    )
+
+    eixos[0].legend()
+    eixos[0].grid(True)
+
+    # GRÁFICO 2 - SINAL FILTRADO
+
+    eixos[1].plot(
+        tempo,
+        sinal_filtrado,
+        label="Sinal filtrado"
+    )
+
+    eixos[1].set_title(
+        "Sinal Filtrado - Domínio do Tempo"
+    )
+
+    eixos[1].set_xlabel(
+        "Tempo (s)"
+    )
+
+    eixos[1].set_ylabel(
+        "Amplitude"
+    )
+
+    eixos[1].legend()
+    eixos[1].grid(True)
+
+    # GRÁFICO 3 - FFT DO SINAL ORIGINAL
+
+    eixos[2].plot(
+        frequencia,
+        fft_original,
+        label="FFT original"
+    )
+
+    eixos[2].set_title(
+        "FFT do Sinal Original"
+    )
+
+    eixos[2].set_xlabel(
+        "Frequência (Hz)"
+    )
+
+    eixos[2].set_ylabel(
+        "Amplitude"
+    )
+
+    eixos[2].set_xlim(
+        0,
+        min(50, max(frequencia))
+    )
+
+    eixos[2].legend()
+    eixos[2].grid(True)
+
+    # GRÁFICO 4 - FFT DO SINAL FILTRADO
+
+    eixos[3].plot(
+        frequencia,
+        fft_filtrado,
+        label="FFT filtrada"
+    )
+
+    eixos[3].set_title(
+        "FFT do Sinal Filtrado"
+    )
+
+    eixos[3].set_xlabel(
+        "Frequência (Hz)"
+    )
+
+    eixos[3].set_ylabel(
+        "Amplitude"
+    )
+
+    eixos[3].set_xlim(
+        0,
+        min(50, max(frequencia))
+    )
+
+    eixos[3].legend()
+    eixos[3].grid(True)
+
+    # Ajusta os gráficos
+    figura.tight_layout()
+
+    # Atualiza a interface
+    canvas.draw()
+
+
+# FUNÇÃO PARA LIMPAR
+
+def limpar_graficos():
+
+    for eixo in eixos:
+        eixo.clear()
+
+        eixo.set_xlabel("")
+        eixo.set_ylabel("")
+        eixo.set_title("")
+
+    figura.tight_layout()
+
+    canvas.draw()
+
 
 #===========================CONFIG. JANELA===========================
 root = tk.Tk()
 root.title("Simulador filtro passa-baixa")
-root.geometry("450x550")
+root.geometry("1100x650")
 root.resizable(False, False)
 
+# Divisão dos controles dos gráficos
+main_pane = ttk.PanedWindow(root, orient=tk.HORIZONTAL)
+main_pane.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+#--- Coluna dos controles ---
+frame_esq = ttk.Frame(main_pane)
+main_pane.add(frame_esq, weight=1)
+
+# --- Controles ---
 # Caixas de texto
-frame_controles = ttk.LabelFrame(root, text=" Parâmetros do Filtro ", padding=15)
+frame_controles = ttk.LabelFrame(frame_esq, text=" Parâmetros do Filtro ", padding=15)
 frame_controles.pack(fill="both", expand=True, padx=15, pady=15)
 lbl_tipo = ttk.Label(frame_controles, text="Tipo de Filtro:")
 lbl_tipo.grid(row=0, column=0, sticky="w", pady=8)
@@ -221,7 +378,7 @@ entry_ruido.insert(0, "0.1")
 
 # Alinhamento dos Botões
 
-frame_botoes = ttk.Frame(root)
+frame_botoes = ttk.Frame(frame_esq)
 frame_botoes.pack(fill="x", padx=15, pady=10)
 
 # Botão Gerar Sinal
@@ -238,5 +395,22 @@ btn_aplicar.pack(side="left", expand=True, padx=2)
 
 btn_limpar = ttk.Button(frame_botoes, text="Limpar", command= limpar_dados)
 btn_limpar.pack(side="left", expand=True, padx=2)
+
+#--- Seção de Gráficos ---
+# Grade 2x2 dos gráficos
+frame_dir = ttk.LabelFrame(main_pane, text="Visualização Gráfica", padding=10)
+main_pane.add(frame_dir, weight=3)
+
+# Figura dos 4 gráficos
+figura, eixos = plt.subplots(2, 2, figsize=(8.5, 5.5))
+eixos = eixos.flatten()
+
+# Conversão
+canvas = FigureCanvasTkAgg(figura, master=frame_dir)
+canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+# Ajuste do layout inicial
+figura.tight_layout(pad=2.0)
+canvas.draw()
 
 root.mainloop()
