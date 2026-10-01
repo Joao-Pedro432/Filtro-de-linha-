@@ -24,11 +24,9 @@ def gerar_sinal():
         fs = float(entry_freq_samp.get())
         ruido_nivel = float(entry_ruido.get())
 
-        f1 = float(entry_freq_min.get()) # Frequência principal
-        f2 = float(20.0)
+        f1 = float(entry_freq_sinal.get()) # Frequência principal
 
         amplitude1 = float(1.0)
-        amplitude2 = float(0.5)
 
         duracao = float(5.0) # Duração em segundos
 
@@ -40,13 +38,14 @@ def gerar_sinal():
         if duracao <= 0:
             raise ValueError("A duração deve ser maior que zero.")
 
-        if f1 <= 0 or f2 <= 0:
+        if f1 <= 0:
             raise ValueError("As frequências devem ser maiores que zero.")
 
         # Frequência de Nyquist
-        if f1 >= fs / 2 or f2 >= fs / 2:
+        if f1 >= fs / 2:
             raise ValueError(
                 "As frequências do sinal devem ser menores que a frequência de Nyquist.")
+        
         # Criação do vetor de tempo
 
         tempo = np.arange(0, duracao, 1 / fs)
@@ -55,18 +54,13 @@ def gerar_sinal():
 
         sinal1 = amplitude1 * np.sin(2 * np.pi * f1 * tempo)
 
-
-        # Segunda senoide
-
-        sinal2 = amplitude2 * np.sin(2 * np.pi * f2 * tempo)
-
         # Geração do ruído branco
 
         ruido = np.random.normal(0, ruido_nivel, len(tempo))
 
         # Sinal final recebido pelo sistema
 
-        sinal_sensor = sinal1 + sinal2
+        sinal_sensor = sinal1
         sinal_original = sinal_sensor + ruido
 
         messagebox.showinfo("Sucesso", "Sinal gerado com sucesso!")
@@ -90,8 +84,14 @@ def aplicar_filtro():
     try:
 
         fs = float(entry_freq_samp.get())
-        fc = float(entry_freq_min.get())
+        fc = float(entry_freq_corte.get())
         ordem = int(entry_ordem.get())
+
+        tipo_filtro = cb_filtro.get()
+
+        # Frequências usadas pelo Passa-Faixa e Rejeita-Faixa
+        fc1 = fc / 2
+        fc2 = fc * 1.5
 
         # Verificações
 
@@ -110,52 +110,91 @@ def aplicar_filtro():
                 "A ordem do filtro deve ser maior que zero."
             )
 
-    
+        # Escolha do tipo de filtro
 
-        # Criação do filtro Passa-baixa
+        if tipo_filtro == "Passa-Baixa":
 
-        b, a = butter(
-            ordem,
-            fc,
-            btype="low",
-            fs=fs
-)
+            b, a = butter(
+                ordem,
+                fc,
+                btype="low",
+                fs=fs
+            )
+
+        elif tipo_filtro == "Passa-Alta":
+
+            b, a = butter(
+                ordem,
+                fc,
+                btype="high",
+                fs=fs
+            )
+
+        elif tipo_filtro == "Passa-Faixa":
+
+            b, a = butter(
+                ordem,
+                [fc1, fc2],
+                btype="bandpass",
+                fs=fs
+            )
+
+        elif tipo_filtro == "Rejeita-Faixa":
+
+            b, a = butter(
+                ordem,
+                [fc1, fc2],
+                btype="bandstop",
+                fs=fs
+            )
+
+        else:
+
+            raise ValueError(
+                "Este tipo de filtro ainda não está disponível."
+            )
 
         # Aplicação do filtro
+
         sinal_filtrado = filtfilt(
             b,
             a,
             sinal_original
-)
+        )
 
         # Cálculo da FFT
 
         n = len(sinal_original)
 
-        # FFT do sinal original
         fft_original = np.abs(
             rfft(sinal_original)
         )
 
-        # FFT do sinal filtrado
         fft_filtrado = np.abs(
             rfft(sinal_filtrado)
         )
 
-        # Frequências correspondentes à FFT
+        # Frequências da FFT
+
         frequencia = rfftfreq(
             n,
             1 / fs
         )
 
-# Atualizar os gráficos
+        # Atualiza os gráficos
+
         atualizar_graficos(
-                fft_original,
-                fft_filtrado
-            )
-        
+            fft_original,
+            fft_filtrado
+        )
+
     except ValueError as e:
-        messagebox.showerror("Erro", f"Valor inválido: {e}")
+
+        messagebox.showerror(
+            "Erro",
+            f"Valor inválido: {e}"
+        )
+
 
 def limpar_dados():
     global sinal_original, sinal_filtrado, tempo
@@ -342,38 +381,54 @@ cb_filtro = ttk.Combobox(
 cb_filtro.grid(row=0, column=1, sticky="ew", pady=8)
 cb_filtro.current(0)
 
-# Frequência Mínima
-lbl_freq_min = ttk.Label(frame_controles, text="Frequência Mínima (Hz)")
-lbl_freq_min.grid(row=1, column=0, sticky="w", pady=8)
-entry_freq_min = ttk.Entry(frame_controles)
-entry_freq_min.grid(row=1, column=1, sticky="ew", pady=8)
-entry_freq_min.insert(0, "5.0")
+# Frequência do Sinal
+lbl_freq_sinal = ttk.Label(
+    frame_controles,
+    text="Frequência do Sinal (Hz):"
+)
+lbl_freq_sinal.grid(row=1, column=0, sticky="w", pady=8)
+
+entry_freq_sinal = ttk.Entry(frame_controles)
+entry_freq_sinal.grid(row=1, column=1, sticky="ew", pady=8)
+entry_freq_sinal.insert(0, "5.0")
+
+
+# Frequência de Corte
+lbl_freq_corte = ttk.Label(
+    frame_controles,
+    text="Frequência de Corte (Hz):"
+)
+lbl_freq_corte.grid(row=2, column=0, sticky="w", pady=8)
+
+entry_freq_corte = ttk.Entry(frame_controles)
+entry_freq_corte.grid(row=2, column=1, sticky="ew", pady=8)
+entry_freq_corte.insert(0, "10.0")
 
 # Freq. Amostragem
 
 lbl_freq_samp = ttk.Label(frame_controles, text="Frequência de Amostragem (Hz):")
-lbl_freq_samp.grid(row=2, column=0, sticky="w", pady=8)
+lbl_freq_samp.grid(row=3, column=0, sticky="w", pady=8)
 
 entry_freq_samp = ttk.Entry(frame_controles)
-entry_freq_samp.grid(row=2, column=1, sticky="ew", pady=8)
+entry_freq_samp.grid(row=3, column=1, sticky="ew", pady=8)
 entry_freq_samp.insert(0, "100.0")
 
 # Ordem do Filtro
 
 lbl_ordem = ttk.Label(frame_controles, text="Ordem do Filtro:")
-lbl_ordem.grid(row=3, column=0, sticky="w", pady=8)
+lbl_ordem.grid(row=4, column=0, sticky="w", pady=8)
 
 entry_ordem = ttk.Entry(frame_controles)
-entry_ordem.grid(row=3, column=1, sticky="ew", pady=8)
+entry_ordem.grid(row=4, column=1, sticky="ew", pady=8)
 entry_ordem.insert(0, "2")
 
 # Nível de Ruído
 
 lbl_ruido = ttk.Label(frame_controles, text="Nível de Ruído:")
-lbl_ruido.grid(row=4, column=0, sticky="w", pady=8)
+lbl_ruido.grid(row=5, column=0, sticky="w", pady=8)
 
 entry_ruido = ttk.Entry(frame_controles)
-entry_ruido.grid(row=4, column=1, sticky="ew", pady=8)
+entry_ruido.grid(row=5, column=1, sticky="ew", pady=8)
 entry_ruido.insert(0, "0.1")
 
 # Alinhamento dos Botões
