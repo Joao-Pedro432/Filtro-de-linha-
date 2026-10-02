@@ -199,18 +199,23 @@ def aplicar_filtro():
 def limpar_dados():
     global sinal_original, sinal_filtrado, tempo
     sinal_original = None
-    signal_filtrado = None
+    sinal_filtrado = None
     tempo = None
     
     # Opcional: limpa ou reseta os campos da tela
-    entry_freq_min.delete(0, tk.END)
-    entry_freq_min.insert(0, "5.0")
+    entry_freq_sinal.delete(0, tk.END)
+    entry_freq_sinal.insert(0, "5.0")
     entry_freq_samp.delete(0, tk.END)
     entry_freq_samp.insert(0, "100.0")
+    entry_freq_corte.delete(0, tk.END)
+    entry_freq_corte.insert(0, "10.0")
     entry_ordem.delete(0, tk.END)
     entry_ordem.insert(0, "2")
     entry_ruido.delete(0, tk.END)
     entry_ruido.insert(0, "0.1")
+
+    if eixos is not None:
+        limpar_graficos()
     
     messagebox.showinfo("Limpeza", "Dados reiniciados com sucesso!")
 
@@ -371,6 +376,7 @@ main_pane.add(frame_esq, weight=1)
 # Caixas de texto
 frame_controles = ttk.LabelFrame(frame_esq, text=" Parâmetros do Filtro ", padding=15)
 frame_controles.pack(fill="both", expand=True, padx=15, pady=15)
+frame_controles.columnconfigure(1, weight=1)
 lbl_tipo = ttk.Label(frame_controles, text="Tipo de Filtro:")
 lbl_tipo.grid(row=0, column=0, sticky="w", pady=8)
 cb_filtro = ttk.Combobox(
