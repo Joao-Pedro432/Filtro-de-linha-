@@ -25,8 +25,10 @@ def gerar_sinal():
         ruido_nivel = float(entry_ruido.get())
 
         f1 = float(entry_freq_sinal.get()) # Frequência principal
+        f2 = 15.0
 
         amplitude1 = float(1.0)
+        amplitude2 = float(0.5)
 
         duracao = float(5.0) # Duração em segundos
 
@@ -54,13 +56,17 @@ def gerar_sinal():
 
         sinal1 = amplitude1 * np.sin(2 * np.pi * f1 * tempo)
 
+        # Segunda senoide
+
+        sinal2 = amplitude2 * np.sin(2 * np.pi * f2 * tempo)
+
         # Geração do ruído branco
 
         ruido = np.random.normal(0, ruido_nivel, len(tempo))
 
         # Sinal final recebido pelo sistema
 
-        sinal_sensor = sinal1
+        sinal_sensor = sinal1 + sinal2
         sinal_original = sinal_sensor + ruido
 
         messagebox.showinfo("Sucesso", "Sinal gerado com sucesso!")
