@@ -25,7 +25,7 @@ def gerar_sinal():
         ruido_nivel = float(entry_ruido.get())
 
         f1 = float(entry_freq_sinal.get()) # Frequência principal
-        f2 = float(entry_freq2.get())
+        f2 = float(entry_freq_sinal2.get()) # Segunda frequência
 
         amplitude1 = float(1.0)
         amplitude2 = float(0.5)
@@ -40,7 +40,7 @@ def gerar_sinal():
         if duracao <= 0:
             raise ValueError("A duração deve ser maior que zero.")
 
-        if f1 <= 0 or f2 <= 0:
+        if f1 <= 0:
             raise ValueError("As frequências devem ser maiores que zero.")
 
         # Frequência de Nyquist
@@ -91,35 +91,26 @@ def aplicar_filtro():
 
         fs = float(entry_freq_samp.get())
         fc = float(entry_freq_corte.get())
+        f1 = float(entry_freq_sinal.get())
+        f2 = float(entry_freq_sinal2.get())
         ordem = int(entry_ordem.get())
 
         tipo_filtro = cb_filtro.get()
-
-        # Frequências usadas pelo Passa-Faixa e Rejeita-Faixa
-        fc1 = fc / 2
-        fc2 = fc * 1.5
-
-        # Verificações
-
-        if fc <= 0:
-            raise ValueError(
-                "A frequência de corte deve ser maior que zero."
-            )
-
-        if fc >= fs / 2:
-            raise ValueError(
-                "A frequência de corte deve ser menor que a frequência de Nyquist."
-            )
-
-        if ordem <= 0:
-            raise ValueError(
-                "A ordem do filtro deve ser maior que zero."
-            )
 
         # Escolha do tipo de filtro
 
         if tipo_filtro == "Passa-Baixa":
 
+            if fc <= 0:
+                raise ValueError(
+                    "A frequência de corte deve ser maior que zero."
+                )
+
+            if fc >= fs / 2:
+                raise ValueError(
+                    "A frequência de corte deve ser menor que a frequência de Nyquist."
+                )
+    
             b, a = butter(
                 ordem,
                 fc,
@@ -128,6 +119,16 @@ def aplicar_filtro():
             )
 
         elif tipo_filtro == "Passa-Alta":
+
+            if fc <= 0:
+                raise ValueError(
+                    "A frequência de corte deve ser maior que zero."
+                )
+
+            if fc >= fs / 2:
+                raise ValueError(
+                    "A frequência de corte deve ser menor que a frequência de Nyquist."
+                )
 
             b, a = butter(
                 ordem,
@@ -138,26 +139,50 @@ def aplicar_filtro():
 
         elif tipo_filtro == "Passa-Faixa":
 
+            if f1 <= 0 or f2 <= 0:
+                raise ValueError(
+                    "As frequências mínima e máxima devem ser maiores que zero."
+                )
+
+            if f2 <= f1:
+                raise ValueError(
+                    "A frequência máxima deve ser maior que a frequência mínima."
+                )
+
+            if f2 >= fs / 2:
+                raise ValueError(
+                    "A frequência máxima deve ser menor que a frequência de Nyquist."
+                )
+
             b, a = butter(
                 ordem,
-                [fc1, fc2],
+                [f1, f2],
                 btype="bandpass",
                 fs=fs
             )
 
         elif tipo_filtro == "Rejeita-Faixa":
 
+            if f1 <= 0 or f2 <= 0:
+                raise ValueError(
+                    "As frequências mínima e máxima devem ser maiores que zero."
+                )
+
+            if f2 <= f1:
+                raise ValueError(
+                    "A frequência máxima deve ser maior que a frequência mínima."
+                )
+
+            if f2 >= fs / 2:
+                raise ValueError(
+                    "A frequência máxima deve ser menor que a frequência de Nyquist."
+                )
+
             b, a = butter(
                 ordem,
-                [fc1, fc2],
+                [f1, f2],
                 btype="bandstop",
                 fs=fs
-            )
-
-        else:
-
-            raise ValueError(
-                "Este tipo de filtro ainda não está disponível."
             )
 
         # Aplicação do filtro
@@ -211,6 +236,8 @@ def limpar_dados():
     # Opcional: limpa ou reseta os campos da tela
     entry_freq_sinal.delete(0, tk.END)
     entry_freq_sinal.insert(0, "5.0")
+    entry_freq_sinal2.delete(0, tk.END)
+    entry_freq_sinal2.insert(0, "15.0")
     entry_freq_samp.delete(0, tk.END)
     entry_freq_samp.insert(0, "100.0")
     entry_freq_corte.delete(0, tk.END)
@@ -219,8 +246,6 @@ def limpar_dados():
     entry_ordem.insert(0, "2")
     entry_ruido.delete(0, tk.END)
     entry_ruido.insert(0, "0.1")
-    entry_freq2.delete(0, tk.END)
-    entry_freq2.insert(0, "15.0")
 
     if eixos is not None:
         limpar_graficos()
@@ -398,7 +423,7 @@ cb_filtro.current(0)
 # Frequência do Sinal
 lbl_freq_sinal = ttk.Label(
     frame_controles,
-    text="Frequência do Sinal (Hz):"
+    text="Frequência 1 do Sinal (Hz):"
 )
 lbl_freq_sinal.grid(row=1, column=0, sticky="w", pady=8)
 
@@ -406,13 +431,18 @@ entry_freq_sinal = ttk.Entry(frame_controles)
 entry_freq_sinal.grid(row=1, column=1, sticky="ew", pady=8)
 entry_freq_sinal.insert(0, "5.0")
 
-# Frequência 2
-label_freq2 = ttk.Label(frame_controles, text="Frequência 2 (Hz):")
-label_freq2.grid(row=2, column=0, sticky="w", pady=8)
+# Segunda Frequência do Sinal
+lbl_freq_sinal2 = ttk.Label(
+    frame_controles,
+    text="Frequência 2 do Sinal (Hz):"
+)
 
-entry_freq2 = ttk.Entry(frame_controles)
-entry_freq2.grid(row=2, column=1, sticky="ew", pady=8)
-entry_freq2.insert(0, "15.0")
+lbl_freq_sinal2.grid(row=2, column=0, sticky="w", pady=8)
+
+entry_freq_sinal2 = ttk.Entry(frame_controles)
+entry_freq_sinal2.grid(row=2, column=1, sticky="ew", pady=8)
+
+entry_freq_sinal2.insert(0, "15.0")
 
 
 # Frequência de Corte
@@ -425,6 +455,7 @@ lbl_freq_corte.grid(row=3, column=0, sticky="w", pady=8)
 entry_freq_corte = ttk.Entry(frame_controles)
 entry_freq_corte.grid(row=3, column=1, sticky="ew", pady=8)
 entry_freq_corte.insert(0, "10.0")
+
 
 # Freq. Amostragem
 
