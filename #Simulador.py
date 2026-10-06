@@ -25,7 +25,7 @@ def gerar_sinal():
         ruido_nivel = float(entry_ruido.get())
 
         f1 = float(entry_freq_sinal.get()) # Frequência principal
-        f2 = 15.0
+        f2 = float(entry_freq2.get())
 
         amplitude1 = float(1.0)
         amplitude2 = float(0.5)
@@ -40,11 +40,11 @@ def gerar_sinal():
         if duracao <= 0:
             raise ValueError("A duração deve ser maior que zero.")
 
-        if f1 <= 0:
+        if f1 <= 0 or f2 <= 0:
             raise ValueError("As frequências devem ser maiores que zero.")
 
         # Frequência de Nyquist
-        if f1 >= fs / 2:
+        if f1 >= fs / 2 or f2 >= fs / 2:
             raise ValueError(
                 "As frequências do sinal devem ser menores que a frequência de Nyquist.")
         
@@ -219,6 +219,8 @@ def limpar_dados():
     entry_ordem.insert(0, "2")
     entry_ruido.delete(0, tk.END)
     entry_ruido.insert(0, "0.1")
+    entry_freq2.delete(0, tk.END)
+    entry_freq2.insert(0, "15.0")
 
     if eixos is not None:
         limpar_graficos()
@@ -404,43 +406,51 @@ entry_freq_sinal = ttk.Entry(frame_controles)
 entry_freq_sinal.grid(row=1, column=1, sticky="ew", pady=8)
 entry_freq_sinal.insert(0, "5.0")
 
+# Frequência 2
+label_freq2 = ttk.Label(frame_controles, text="Frequência 2 (Hz):")
+label_freq2.grid(row=2, column=0, sticky="w", pady=8)
+
+entry_freq2 = ttk.Entry(frame_controles)
+entry_freq2.grid(row=2, column=1, sticky="ew", pady=8)
+entry_freq2.insert(0, "15.0")
+
 
 # Frequência de Corte
 lbl_freq_corte = ttk.Label(
     frame_controles,
     text="Frequência de Corte (Hz):"
 )
-lbl_freq_corte.grid(row=2, column=0, sticky="w", pady=8)
+lbl_freq_corte.grid(row=3, column=0, sticky="w", pady=8)
 
 entry_freq_corte = ttk.Entry(frame_controles)
-entry_freq_corte.grid(row=2, column=1, sticky="ew", pady=8)
+entry_freq_corte.grid(row=3, column=1, sticky="ew", pady=8)
 entry_freq_corte.insert(0, "10.0")
 
 # Freq. Amostragem
 
 lbl_freq_samp = ttk.Label(frame_controles, text="Frequência de Amostragem (Hz):")
-lbl_freq_samp.grid(row=3, column=0, sticky="w", pady=8)
+lbl_freq_samp.grid(row=4, column=0, sticky="w", pady=8)
 
 entry_freq_samp = ttk.Entry(frame_controles)
-entry_freq_samp.grid(row=3, column=1, sticky="ew", pady=8)
+entry_freq_samp.grid(row=4, column=1, sticky="ew", pady=8)
 entry_freq_samp.insert(0, "100.0")
 
 # Ordem do Filtro
 
 lbl_ordem = ttk.Label(frame_controles, text="Ordem do Filtro:")
-lbl_ordem.grid(row=4, column=0, sticky="w", pady=8)
+lbl_ordem.grid(row=5, column=0, sticky="w", pady=8)
 
 entry_ordem = ttk.Entry(frame_controles)
-entry_ordem.grid(row=4, column=1, sticky="ew", pady=8)
+entry_ordem.grid(row=5, column=1, sticky="ew", pady=8)
 entry_ordem.insert(0, "2")
 
 # Nível de Ruído
 
 lbl_ruido = ttk.Label(frame_controles, text="Nível de Ruído:")
-lbl_ruido.grid(row=5, column=0, sticky="w", pady=8)
+lbl_ruido.grid(row=6, column=0, sticky="w", pady=8)
 
 entry_ruido = ttk.Entry(frame_controles)
-entry_ruido.grid(row=5, column=1, sticky="ew", pady=8)
+entry_ruido.grid(row=6, column=1, sticky="ew", pady=8)
 entry_ruido.insert(0, "0.1")
 
 # Alinhamento dos Botões
