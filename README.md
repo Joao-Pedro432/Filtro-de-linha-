@@ -133,3 +133,4 @@ Para analisar as frequências, o programa utiliza `numpy.fft.rfft()` e `numpy.ff
 O simulador foi desenvolvido para fins acadêmicos e permite observar, de forma prática, como o ruído afeta um sinal e como diferentes filtros digitais modificam suas componentes de frequência. O projeto se relaciona ao processamento digital de sinais, à instrumentação e aos Sistemas Ciberfísicos.
 
 Projeto acadêmico: Simulador de Filtros Digitais.
+
